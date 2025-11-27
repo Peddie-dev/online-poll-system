@@ -49,20 +49,20 @@ The **Online Polling System** is an interactive platform where users can create 
 
 - ### Feature Development
   ```bash
-feat: create poll creation and voting functionality
-feat: implement real-time results display
+  feat: create poll creation and voting functionality
+  feat: implement real-time results display
 
 - ### UI Enhancements
   ```bash
-style: enhance UI with charts for results
+  style: enhance UI with charts for results
 
 - ### Bug Fixes
   ```bash
-fix: resolve state update bugs in Redux
+  fix: resolve state update bugs in Redux
 
 - ### Documentation
   ```bash
-docs: update README with setup instructions
+  docs: update README with setup instructions
 
 
 ---
