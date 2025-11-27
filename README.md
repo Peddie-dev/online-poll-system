@@ -1,36 +1,100 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Project Nexus: Online Polling System
 
-## Getting Started
+## Overview
+The **Online Polling System** is an interactive platform where users can create polls, vote, and view live results. This project emphasizes **real-time updates, dynamic data visualizations, and seamless user interaction**, providing practical experience with modern frontend development tools and best practices.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Project Goals
+- **API Integration:** Fetch and display poll questions and live results from an API.
+- **State Management:** Use **Redux** for efficient application state handling.
+- **Dynamic Visualizations:** Implement charts for real-time poll results.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Technologies Used
+- **React / React Native**: Component-based UI development.
+- **Redux**: Centralized state management.
+- **TypeScript**: Type safety and maintainable code.
+- **Charting Library**: Dynamic poll result visualizations.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Key Features
 
-To learn more about Next.js, take a look at the following resources:
+### 1. Poll Creation and Voting
+- Create polls with customizable options.
+- Users can vote and share polls with others.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 2. Real-Time Results Display
+- Live poll results update automatically.
+- Charts and UI components reflect new votes instantly.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 3. Dynamic Visualizations
+- Interactive charts display poll results.
+- Fully responsive across devices.
 
-## Deploy on Vercel
+### 4. Form Validation
+- Validate poll creation forms.
+- User-friendly error messages for invalid input.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Implementation Process
+
+### Git Commit Workflow
+- **Initial Setup**
+  ```bash
+  feat: initialize React project with Redux
+
+### Feature Development
+feat: create poll creation and voting functionality
+feat: implement real-time results display
+
+### UI Enhancements
+style: enhance UI with charts for results
+
+### Bug Fixes
+fix: resolve state update bugs in Redux
+
+### Documentation
+docs: update README with setup instructions
+
+
+---
+
+## **Step 2: Figma Design Setup**
+
+For the Online Polling System, here’s a suggested Figma design plan:
+
+1. **Pages / Screens**
+   - **Home Page:** List of active polls with voting buttons.
+   - **Poll Details Page:** Poll question, options, live results chart.
+   - **Create Poll Page:** Form with input validation for creating polls.
+   - **User Profile Page (optional):** Track user votes or created polls.
+   - **Error / Success Screens:** Feedback after poll submission.
+
+2. **Components**
+   - Buttons: Vote, Share, Submit.
+   - Input fields: Text input for poll questions and options.
+   - Chart Component: Bar or Pie chart for poll results.
+   - Navigation: Header with links to Home, Create Poll, Profile.
+
+3. **Color Scheme / Typography**
+   - Modern and minimal: e.g., **primary: #4F46E5**, **secondary: #6366F1**.
+   - Font: Inter or Roboto for readability.
+   - Responsive layout for mobile and desktop.
+
+4. **Prototype Flow**
+   - Home → Select Poll → Vote → See Live Results
+   - Create Poll → Submit → Redirect to Home/Results
+
+---
+
+## **Step 3: GitHub Repository Setup**
+
+1. Create a new repository: **`alx-project-nexus`**.
+2. Clone it locally:
+   ```bash
+   git clone https://github.com/your-username/alx-project-nexus.git
+   cd alx-project-nexus
