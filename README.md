@@ -47,17 +47,21 @@ The **Online Polling System** is an interactive platform where users can create 
   ```bash
   feat: initialize React project with Redux
 
-### Feature Development
+- ### Feature Development
+  ```bash
 feat: create poll creation and voting functionality
 feat: implement real-time results display
 
-### UI Enhancements
+- ### UI Enhancements
+  ```bash
 style: enhance UI with charts for results
 
-### Bug Fixes
+- ### Bug Fixes
+  ```bash
 fix: resolve state update bugs in Redux
 
-### Documentation
+- ### Documentation
+  ```bash
 docs: update README with setup instructions
 
 
