@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from 'next/link';
 
 export default function Hero() {
   return (
@@ -26,12 +27,18 @@ export default function Hero() {
           </p>
 
           <div className="mt-8 flex gap-4">
-            <button className="px-6 py-3 bg-white text-blue-700 rounded-lg font-medium shadow hover:bg-blue-50 transition">
-              Create Poll
-            </button>
-            <button className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium shadow hover:bg-blue-700 transition">
-              Live Demo
-            </button>
+               <Link href="/create">
+        <button className="px-6 py-3 bg-white text-blue-700 rounded-lg font-medium shadow hover:bg-blue-50 transition">
+          Create Poll
+        </button>
+      </Link>
+
+      {/* Live Demo button */}
+      <Link href="/live-demo">
+        <button className="px-6 py-3 bg-blue-600 text-white rounded-lg font-medium shadow hover:bg-blue-700 transition">
+          Live Demo
+        </button>
+      </Link>
           </div>
         </div>
       </div>

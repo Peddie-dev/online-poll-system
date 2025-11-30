@@ -1,16 +1,29 @@
 export default function ProfilePage() {
   return (
-    <div className="max-w-4xl mx-auto py-12 px-6">
-      <h1 className="text-3xl font-bold mb-6">Your Profile</h1>
-      <p className="text-gray-600">Manage your polls and account settings here.</p>
-      {/* Placeholder for profile info */}
-      <div className="mt-6 border p-6 rounded shadow-sm">
-        <p>Name: John Doe</p>
-        <p>Email: john@example.com</p>
-        <button className="mt-4 px-6 py-2 bg-blue-600 text-white rounded">
-          Edit Profile
-        </button>
+    <div className="min-h-screen bg-gray-100 px-6 py-10">
+      
+      {/* Page Heading */}
+      <h1 className="text-2xl font-bold">Profile</h1>
+      <p className="text-gray-700 font-medium mt-1">Welcome Back, Richard</p>
+      <p className="text-gray-500 mt-1">Your created polls and voting history</p>
+
+      {/* Poll Card */}
+      <div className="mt-8">
+        <div className="bg-white w-64 p-4 rounded-xl shadow-sm">
+          <h3 className="font-semibold text-gray-800">How do you drink coffee?</h3>
+          <p className="text-sm text-gray-600 mt-1">Votes: 120</p>
+
+          <div className="flex gap-3 mt-4">
+            <button className="px-4 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600 transition">
+              Edit
+            </button>
+            <button className="px-4 py-1 bg-red-500 text-white rounded-md text-sm hover:bg-red-600 transition">
+              Delete
+            </button>
+          </div>
+        </div>
       </div>
+
     </div>
   );
 }
