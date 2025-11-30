@@ -3,7 +3,8 @@ import { useDispatch } from "react-redux";
 import { AppDispatch } from "../../store/store";
 import { useForm, useFieldArray } from "react-hook-form";
 import { createPoll } from "../../store/slices/pollsSlice";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
+import VoteSuccessModal from "../../app/votesuccessmodal/VoteSuccessModal";
 
 type FormValues = {
   question: string;
@@ -12,15 +13,13 @@ type FormValues = {
 
 export default function CreatePollPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const router = useRouter();
   const { register, control, handleSubmit, formState } = useForm<FormValues>({
     defaultValues: { question: "", options: [{ text: "" }, { text: "" }] },
   });
-
   const { fields, append, remove } = useFieldArray({ control, name: "options" });
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const onSubmit = async (data: FormValues) => {
-    // validation: ensure question and at least 2 non-empty options
     const opts = data.options.map((o) => o.text.trim()).filter(Boolean);
     if (!data.question.trim()) {
       alert("Question is required");
@@ -33,7 +32,7 @@ export default function CreatePollPage() {
 
     try {
       await dispatch(createPoll({ question: data.question.trim(), options: opts })).unwrap();
-      router.push("/"); // or profile
+      setIsModalOpen(true); // show success modal
     } catch (err: any) {
       alert("Failed to create poll: " + (err.message || JSON.stringify(err)));
     }
@@ -55,7 +54,7 @@ export default function CreatePollPage() {
           {fields.map((f, i) => (
             <div key={f.id} className="flex gap-2">
               <input
-                {...register(`options.${i}.text` as const, { required: i < 2 })} // ensure first two required
+                {...register(`options.${i}.text` as const, { required: i < 2 })}
                 className="flex-1 px-4 py-2 rounded-xl bg-gray-100 focus:ring-2 focus:ring-blue-500 outline-none"
                 placeholder={`Option ${i + 1}`}
               />
@@ -82,9 +81,13 @@ export default function CreatePollPage() {
           <p className="text-red-600 mt-4 text-sm">Please fix validation errors above.</p>
         )}
       </form>
+
+      {/* Success Modal */}
+      <VoteSuccessModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
     </div>
   );
 }
+
 
 
 

@@ -20,36 +20,39 @@ interface PollsState {
   error?: string | null;
 }
 
-const initialState: PollsState = { list: [], current: null, loading: false, error: null };
+const initialState: PollsState = {
+  list: [],
+  current: null,
+  loading: false,
+  error: null,
+};
 
-const API_BASE = process.env.NEXT_PUBLIC_API_BASE || ""; // e.g. "https://api.example.com"
-
-// fetch polls list
+// Fetch all polls
 export const fetchPolls = createAsyncThunk("polls/fetchList", async (_, { rejectWithValue }) => {
   try {
-    const res = await axios.get(`${API_BASE}/api/polls`);
-    return res.data as Poll[];
+    const res = await axios.get(`/api/polls`);
+    return Array.isArray(res.data) ? res.data : res.data.polls ?? [];
   } catch (err: any) {
     return rejectWithValue(err.response?.data || err.message);
   }
 });
 
-// fetch single poll details
+// Fetch single poll
 export const fetchPoll = createAsyncThunk("polls/fetchOne", async (id: string, { rejectWithValue }) => {
   try {
-    const res = await axios.get(`${API_BASE}/api/polls/${id}`);
+    const res = await axios.get(`/api/polls/${id}`);
     return res.data as Poll;
   } catch (err: any) {
     return rejectWithValue(err.response?.data || err.message);
   }
 });
 
-// create poll
+// Create a poll
 export const createPoll = createAsyncThunk(
   "polls/create",
   async (payload: { question: string; options: string[] }, { rejectWithValue }) => {
     try {
-      const res = await axios.post(`${API_BASE}/api/polls`, payload);
+      const res = await axios.post(`/api/polls`, payload);
       return res.data as Poll;
     } catch (err: any) {
       return rejectWithValue(err.response?.data || err.message);
@@ -57,12 +60,12 @@ export const createPoll = createAsyncThunk(
   }
 );
 
-// vote
+// Vote on a poll
 export const voteOnPoll = createAsyncThunk(
   "polls/vote",
   async (payload: { id: string; optionIndex: number }, { rejectWithValue }) => {
     try {
-      const res = await axios.post(`${API_BASE}/api/polls/${payload.id}/vote`, {
+      const res = await axios.post(`/api/polls/${payload.id}/vote`, {
         optionIndex: payload.optionIndex,
       });
       return { id: payload.id, poll: res.data as Poll };
@@ -76,10 +79,8 @@ const pollsSlice = createSlice({
   name: "polls",
   initialState,
   reducers: {
-    // optionally update current poll manually (e.g. via socket)
     updateCurrent(state, action: PayloadAction<Poll>) {
       state.current = action.payload;
-      // also update the list if needed
       const idx = state.list.findIndex((p) => p.id === action.payload.id);
       if (idx >= 0) state.list[idx] = action.payload;
     },
@@ -90,7 +91,10 @@ const pollsSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(fetchPolls.pending, (s) => { s.loading = true; s.error = null; })
-      .addCase(fetchPolls.fulfilled, (s, a) => { s.loading = false; s.list = a.payload; })
+      .addCase(fetchPolls.fulfilled, (s, a) => {
+        s.loading = false;
+        s.list = Array.isArray(a.payload) ? a.payload : [];
+      })
       .addCase(fetchPolls.rejected, (s, a) => { s.loading = false; s.error = a.payload as string; })
 
       .addCase(fetchPoll.pending, (s) => { s.loading = true; s.error = null; })
@@ -107,7 +111,6 @@ const pollsSlice = createSlice({
       .addCase(voteOnPoll.pending, (s) => { s.loading = true; s.error = null; })
       .addCase(voteOnPoll.fulfilled, (s, a) => {
         s.loading = false;
-        // replace poll in list + current
         const updated = a.payload.poll;
         const idx = s.list.findIndex((p) => p.id === a.payload.id);
         if (idx >= 0) s.list[idx] = updated;

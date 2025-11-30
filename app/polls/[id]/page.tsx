@@ -1,87 +1,110 @@
 "use client";
-import { useEffect, useMemo, useRef, useState } from "react";
+
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchPoll, voteOnPoll, updateCurrent } from "../../../store/slices/pollsSlice";
-import type { AppDispatch, RootState } from "../../../store/store";
-import { Pie } from "react-chartjs-2";
-import Chart from "chart.js/auto";
-import io from "socket.io-client";
+import { fetchPoll, voteOnPoll } from "../../../store/slices/pollsSlice";
+import type { RootState, AppDispatch } from "../../../store/store";
 
-export default function PollDetails() {
+export default function PollPage() {
   const params = useParams();
-  const id = params.id;
   const dispatch = useDispatch<AppDispatch>();
-  const { current } = useSelector((s: RootState) => s.polls);
+  const { current: poll, loading, error } = useSelector((state: RootState) => state.polls);
 
-  const [socketConnected, setSocketConnected] = useState(false);
-  const socketRef = useRef<any>(null);
+  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  const [voted, setVoted] = useState(false);
+
+  // Safely extract pollId
+  const pollId = typeof params?.id === 'string' 
+    ? params.id 
+    : Array.isArray(params?.id) 
+      ? params.id[0] 
+      : null;
 
   useEffect(() => {
-    dispatch(fetchPoll(id));
-    // try socket.io connection (update URL to your server)
-    try {
-      socketRef.current = io(process.env.NEXT_PUBLIC_SOCKET_URL || "", { transports: ["websocket"] });
-      socketRef.current.on("connect", () => setSocketConnected(true));
-      socketRef.current.emit("joinPoll", id);
-      socketRef.current.on("pollUpdated", (updatedPoll: any) => {
-        dispatch(updateCurrent(updatedPoll));
-      });
-    } catch (e) {
-      console.warn("Socket not available, will fallback to polling.");
+    // Only fetch if pollId is a valid non-empty string
+    if (pollId && pollId !== 'undefined') {
+      dispatch(fetchPoll(pollId));
     }
+  }, [pollId, dispatch]);
 
-    const polling = setInterval(() => dispatch(fetchPoll(id)), 3000);
-    return () => {
-      clearInterval(polling);
-      if (socketRef.current) {
-        socketRef.current.emit("leavePoll", id);
-        socketRef.current.disconnect();
-      }
-    };
-  }, [dispatch, id]);
-
-  const labels = current?.options.map((o) => o.text) || [];
-  const data = {
-    labels,
-    datasets: [{ data: current?.options.map((o) => o.votes) || [], backgroundColor: ["#2563eb","#ef4444","#f59e0b","#10b981","#8b5cf6"] }],
-  };
-
-  const onVote = async (index: number) => {
+  const handleVote = async () => {
+    if (selectedOption === null || !pollId) return;
     try {
-      await dispatch(voteOnPoll({ id, optionIndex: index })).unwrap();
-    } catch (err) {
-      alert("Vote failed: " + String(err));
+      await dispatch(voteOnPoll({ id: pollId, optionIndex: selectedOption })).unwrap();
+      setVoted(true);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      alert("Failed to submit vote: " + message);
     }
   };
+
+  // Early returns with better checks
+  if (!pollId) return <p className="p-6">Invalid poll ID</p>;
+  if (loading) return <p className="p-6">Loading poll...</p>;
+  if (error) return <p className="p-6 text-red-600">Error: {error}</p>;
+  if (!poll) return <p className="p-6">Poll not found</p>;
+
+  const totalVotes = poll.options.reduce((sum, o) => sum + (o.votes ?? 0), 0);
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      {!current ? <p>Loading poll...</p> : (
-        <div className="max-w-3xl mx-auto bg-white p-6 rounded-lg shadow">
-          <h2 className="text-xl font-semibold mb-4">{current.question}</h2>
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-100">
+      <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-lg">
+        <h1 className="text-2xl font-bold mb-4">{poll.question}</h1>
 
-          {/* chart */}
-          <div className="max-w-sm mx-auto">
-            <Pie data={data} />
-          </div>
-
-          {/* options */}
-          <div className="mt-6 grid gap-3">
-            {current.options.map((opt, idx) => (
-              <button key={idx} onClick={() => onVote(idx)}
-                className="text-left px-4 py-3 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-100">
-                <div className="flex justify-between">
-                  <span>{opt.text}</span>
-                  <span className="text-sm text-gray-600">{opt.votes} votes</span>
-                </div>
-              </button>
+        {!voted ? (
+          <div className="space-y-3">
+            {poll.options.map((opt, idx) => (
+              <label
+                key={idx}
+                className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-blue-50"
+              >
+                <input
+                  type="radio"
+                  name="pollOption"
+                  checked={selectedOption === idx}
+                  onChange={() => setSelectedOption(idx)}
+                  className="accent-blue-600"
+                />
+                <span>{opt.text}</span>
+              </label>
             ))}
-          </div>
 
-          <p className="mt-4 text-sm text-gray-500">Realtime: {socketConnected ? "Socket" : "Polling"}</p>
-        </div>
-      )}
+            <button
+              onClick={handleVote}
+              disabled={selectedOption === null}
+              className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
+            >
+              Submit Vote
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {poll.options.map((opt, idx) => {
+              // ✅ Fix 3: Consistent null handling
+              const votes = opt.votes ?? 0;
+              const percent = totalVotes 
+                ? ((votes / totalVotes) * 100).toFixed(1) 
+                : "0";
+              return (
+                <div key={idx}>
+                  <div className="flex justify-between mb-1">
+                    <span>{opt.text}</span>
+                    <span>{votes} votes ({percent}%)</span>
+                  </div>
+                  <div className="h-4 bg-gray-200 rounded-full">
+                    <div
+                      className="h-4 bg-blue-600 rounded-full"
+                      style={{ width: `${percent}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+            <p className="mt-4 font-medium">Total Votes: {totalVotes}</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
