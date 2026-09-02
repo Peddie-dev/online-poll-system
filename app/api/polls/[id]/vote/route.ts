@@ -1,46 +1,73 @@
+// app/api/polls/[id]/vote/route.ts
+
 import { NextRequest, NextResponse } from "next/server";
-import { polls } from "@/lib/polls";
+import { prisma } from "@/lib/prisma";
 
-// GET /api/polls/[id] - Get single poll
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const { id } = params;
-  
-  console.log("GET /api/polls/" + id);
-  console.log("Available polls:", polls.map(p => p.id));
-  
-  const poll = polls.find(p => p.id === id);
-  
-  if (!poll) {
-    return NextResponse.json(
-      { error: "Poll not found", availableIds: polls.map(p => p.id) },
-      { status: 404 }
-    );
-  }
-  
-  return NextResponse.json(poll);
-}
+const formatPollResponse = (poll: any) => ({
+  ...poll,
+  options: poll.options.map((option: any) => ({
+    id: option.id,
+    text: option.text,
+    votes: option._count.votes,
+  })),
+});
 
-// POST /api/polls/[id] - Vote on poll
+// POST /api/polls/[id]/vote - Submit a vote
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: { id: string } }
 ) {
-  const { id } = params;
-  const { optionIndex } = await req.json();
+  const pollId = parseInt(context.params.id, 10);
+  const { optionId } = await req.json();
 
-  const poll = polls.find(p => p.id === id);
-  
-  if (!poll) {
-    return NextResponse.json({ error: "Poll not found" }, { status: 404 });
-  }
-  
-  if (optionIndex < 0 || optionIndex >= poll.options.length) {
-    return NextResponse.json({ error: "Invalid option" }, { status: 400 });
+  if (isNaN(pollId) || typeof optionId !== "number") {
+    return NextResponse.json({ error: "Invalid input." }, { status: 400 });
   }
 
-  poll.options[optionIndex].votes += 1;
-  return NextResponse.json(poll);
+  try {
+    // Ensure option belongs to this poll
+    const option = await prisma.pollOption.findFirst({
+      where: { id: optionId, pollId },
+    });
+
+    if (!option) {
+      return NextResponse.json(
+        { error: "Option does not belong to this poll." },
+        { status: 404 }
+      );
+    }
+
+    // Save vote
+    await prisma.vote.create({
+      data: { optionId },
+    });
+
+    // Fetch updated poll
+    const updatedPoll = await prisma.poll.findUnique({
+      where: { id: pollId },
+      include: {
+        options: {
+          include: {
+            _count: { select: { votes: true } },
+          },
+        },
+      },
+    });
+
+    if (!updatedPoll) {
+      return NextResponse.json(
+        { error: "Updated poll not found." },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(formatPollResponse(updatedPoll));
+  } catch (error) {
+    console.error("Error submitting vote:", error);
+    return NextResponse.json(
+      { error: "Failed to submit vote" },
+      { status: 500 }
+    );
+  }
 }
+

@@ -1,0 +1,40 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+ 
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Poll {
+  id        Int      @id @default(autoincrement())
+  question  String  
+  // Options that belong to this poll
+  options   Option[]
+  createdAt DateTime @default(now())
+}
+
+model Option {
+  id     Int    @id @default(autoincrement())
+  text   String 
+  pollId Int
+  // Relationship back to the Poll
+  poll   Poll   @relation(fields: [pollId], references: [id])
+  // Votes cast for this option
+  votes  Vote[]
+}
+
+model Vote {
+  id       Int      @id @default(autoincrement())
+  optionId Int
+  // You might want to track the user/voter, 
+  // but for simplicity, we'll just track the vote time
+  votedAt  DateTime @default(now())
+  // Relationship back to the Option that was voted on
+  option   Option   @relation(fields: [optionId], references: [id])
+}

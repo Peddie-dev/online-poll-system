@@ -1,3 +1,5 @@
+// app/polls/[id]/page.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -11,10 +13,11 @@ export default function PollPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { current: poll, loading, error } = useSelector((state: RootState) => state.polls);
 
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
+  // selectedOption stores the Option's database ID
+  const [selectedOption, setSelectedOption] = useState<number | null>(null); 
   const [voted, setVoted] = useState(false);
 
-  // Safely extract pollId
+  // Safely extract pollId (should be string, representing the Poll's database ID)
   const pollId = typeof params?.id === 'string' 
     ? params.id 
     : Array.isArray(params?.id) 
@@ -22,7 +25,6 @@ export default function PollPage() {
       : null;
 
   useEffect(() => {
-    // Only fetch if pollId is a valid non-empty string
     if (pollId && pollId !== 'undefined') {
       dispatch(fetchPoll(pollId));
     }
@@ -31,7 +33,8 @@ export default function PollPage() {
   const handleVote = async () => {
     if (selectedOption === null || !pollId) return;
     try {
-      await dispatch(voteOnPoll({ id: pollId, optionIndex: selectedOption })).unwrap();
+      // Send optionId (the database ID)
+      await dispatch(voteOnPoll({ id: pollId, optionId: selectedOption })).unwrap(); 
       setVoted(true);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
@@ -39,13 +42,14 @@ export default function PollPage() {
     }
   };
 
-  // Early returns with better checks
   if (!pollId) return <p className="p-6">Invalid poll ID</p>;
   if (loading) return <p className="p-6">Loading poll...</p>;
   if (error) return <p className="p-6 text-red-600">Error: {error}</p>;
-  if (!poll) return <p className="p-6">Poll not found</p>;
+  // Check if poll is null OR if poll exists but has no options (e.g., deleted options)
+  if (!poll || !poll.options) return <p className="p-6">Poll not found or data incomplete.</p>;
 
-  const totalVotes = poll.options.reduce((sum, o) => sum + (o.votes ?? 0), 0);
+  // Use defensive check for reduce()
+  const totalVotes = (poll.options ?? []).reduce((sum, o) => sum + (o.votes ?? 0), 0);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gray-100">
@@ -54,16 +58,17 @@ export default function PollPage() {
 
         {!voted ? (
           <div className="space-y-3">
-            {poll.options.map((opt, idx) => (
+            {/* Defensive check for map() in voting section */}
+            {(poll.options ?? []).map((opt) => ( 
               <label
-                key={idx}
+                key={opt.id}
                 className="flex items-center gap-3 p-3 border rounded-lg cursor-pointer hover:bg-blue-50"
               >
                 <input
                   type="radio"
                   name="pollOption"
-                  checked={selectedOption === idx}
-                  onChange={() => setSelectedOption(idx)}
+                  checked={selectedOption === opt.id} 
+                  onChange={() => setSelectedOption(opt.id)} 
                   className="accent-blue-600"
                 />
                 <span>{opt.text}</span>
@@ -80,14 +85,14 @@ export default function PollPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {poll.options.map((opt, idx) => {
-              // ✅ Fix 3: Consistent null handling
+            {/* Defensive check for map() in results section */}
+            {(poll.options ?? []).map((opt) => { 
               const votes = opt.votes ?? 0;
               const percent = totalVotes 
                 ? ((votes / totalVotes) * 100).toFixed(1) 
                 : "0";
               return (
-                <div key={idx}>
+                <div key={opt.id}>
                   <div className="flex justify-between mb-1">
                     <span>{opt.text}</span>
                     <span>{votes} votes ({percent}%)</span>
